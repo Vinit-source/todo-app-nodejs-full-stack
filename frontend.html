@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ToDo App</title>
+  </head>
+  <body>
+    <div style="width: 420px; margin: 0 auto; text-align: center">
+      <h1>ToDo Application</h1>
+      <input id="todo-title" type="text" placeholder="Enter ToDo" />
+      <input id="date-picker" type="date" />
+      <button onclick="addTodo()">Add Todo</button>
+      <hr />
+      <div id="todo-list"></div>
+    </div>
+
+    <script>
+      /////////////////////
+      //  Model section  //
+      /////////////////////
+
+      // If localStorage has a todos array, then use it
+      // otherwise use the default array
+      let todos;
+      const baseURL = "http://127.0.0.1:3000/";
+
+      function getTodos() {
+        fetch(baseURL + "todos")
+          .then((res) => res.json())
+          .then((savedTodos) => {
+            if (Array.isArray(savedTodos)) {
+              todos = savedTodos;
+              console.log(todos);
+            }
+          })
+          .then(() => render());
+      }
+
+      getTodos();
+      // Retrieve localStorage
+      //   const savedTodos = JSON.parse(localStorage.getItem("todos"));
+
+      // We use methods like todos.push, todos.filter, etc. to manage our data.
+      // Also we have createTodo and DeleteTodo to manage data
+      function createTodo(title, dueDate) {
+        // const id = "" + new Date().getTime(); // Convert to string to avoid TypeError at line 65.
+        todos.push({
+          //   id: id,
+          title: title,
+          dueDate: dueDate,
+        });
+
+        saveTodos().then(() => getTodos());
+      }
+
+      async function removeTodo(idToDelete) {
+        todos = todos.filter((todo) => {
+          // If the ID of this todo matches idToDelete, return false
+          // For everything else, return true
+          if (todo.id === idToDelete) {
+            return false;
+          } else {
+            return true;
+          }
+        });
+
+        deleteFetch = fetch(baseURL + "todo/" + idToDelete, {
+          method: "DELETE",
+        });
+      }
+
+      function saveTodos() {
+        // localStorage.setItem("todos", JSON.stringify(todos));
+        saveFetch = fetch(baseURL + "todos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(todos),
+        }).then((res) => {
+          return res.json();
+        });
+        return saveFetch;
+      }
+
+      //////////////////
+      //  Controller  //
+      //////////////////
+
+      // Add a new Todo
+      function addTodo() {
+        // Add todo title entered in the textbox into the todos array
+        const textbox = document.getElementById("todo-title");
+        const title = textbox.value;
+
+        const datePicker = document.getElementById("date-picker");
+        const dueDate = datePicker.value;
+        createTodo(title, dueDate);
+        // display array in the todo-list element
+        render();
+      }
+
+      // Delete ToDo
+      function deleteTodo(event) {
+        const deleteButton = event.target;
+        const idToDelete = deleteButton.id;
+        removeTodo(idToDelete).then(() => getTodos());
+        // render();
+      }
+
+      //   Click Todo to Edit
+      function clickTodo(event) {
+        const element = event.target;
+        idToToggle = element.dataset.id;
+        toggleIsEditing(idToToggle);
+        render();
+      }
+
+      //   Save edit changes
+      function updateTodo(event) {
+        const updateButton = event.target;
+        idToEdit = updateButton.dataset.id;
+        dueDate = updateButton.previousSibling.value;
+        title = updateButton.previousSibling.previousSibling.value;
+        editTodo(idToEdit, title, dueDate);
+        render();
+      }
+
+      function changeBackground(event, color) {
+        element = event.target;
+        element.style.backgroundColor = color;
+      }
+
+      function changeCursor(event, cursor) {
+        const element = event.target;
+        element.style.cursor = cursor;
+      }
+
+      ////////////
+      //  View  //
+      ////////////
+
+      // Render todos array on the DOM
+      function render() {
+        // reset our list
+        document.getElementById("todo-list").innerHTML = "";
+
+        // Append into the todo-list div from the array
+        todos.forEach(function (todo) {
+          const element = document.createElement("div");
+          element.dataset.id = todo.id;
+          if (todo.isEditing == true) {
+            const textbox = document.createElement("input");
+            textbox.type = "text";
+            textbox.dataset.id = todo.id;
+
+            const datePicker = document.createElement("input");
+            datePicker.type = "date";
+            datePicker.dataset.id = todo.id;
+
+            const updateButton = document.createElement("button");
+            updateButton.innerText = "Update";
+            updateButton.dataset.id = todo.id;
+            updateButton.onclick = updateTodo;
+
+            // console.log(element.dataset);
+
+            // element.innerHTML = "";
+            element.appendChild(textbox);
+            element.appendChild(datePicker);
+            element.appendChild(updateButton);
+          } else {
+            element.innerText = todo.title + " " + todo.dueDate;
+
+            const deleteButton = document.createElement("button");
+            deleteButton.innerText = "Delete";
+            deleteButton.style = "margin-left: 12px";
+            deleteButton.id = todo.id; // Stores as a string
+            deleteButton.onclick = deleteTodo;
+            element.appendChild(deleteButton);
+
+            element.onmouseenter = function (event) {
+              changeBackground(event, "#dddddd");
+              changeCursor(event, "pointer");
+            };
+            element.onmouseleave = function (event) {
+              changeBackground(event, "#ffffff");
+            };
+            element.onclick = clickTodo;
+          }
+
+          const todoList = document.getElementById("todo-list");
+          todoList.appendChild(element);
+        });
+      }
+    </script>
+  </body>
+</html>
