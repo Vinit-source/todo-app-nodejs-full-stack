@@ -25,10 +25,10 @@
       // If localStorage has a todos array, then use it
       // otherwise use the default array
       let todos;
-      const baseURL = "http://127.0.0.1:3000/";
+      const baseURL = "https://63d927bcbaa0f79e09b62a1a.mockapi.io/";
 
       function getTodos() {
-        fetch(baseURL + "todos")
+        fetch(baseURL + "todo_list")
           .then((res) => res.json())
           .then((savedTodos) => {
             if (Array.isArray(savedTodos)) {
@@ -42,7 +42,7 @@
 
       getTodos();
       // Retrieve localStorage
-      //   const savedTodos = JSON.parse(localStorage.getItem("todos"));
+      //   const savedTodos = JSON.parse(localStorage.getItem("todo_list"));
 
       // We use methods like todos.push, todos.filter, etc. to manage our data.
       // Also we have createTodo and DeleteTodo to manage data
@@ -68,14 +68,14 @@
           }
         });
 
-        deleteFetch = await fetch(baseURL + "todo/" + idToDelete, {
+        deleteFetch = await fetch(baseURL + "todo_list/" + idToDelete, {
           method: "DELETE",
         });
       }
 
       function saveTodos() {
-        // localStorage.setItem("todos", JSON.stringify(todos));
-        saveFetch = fetch(baseURL + "todos", {
+        // localStorage.setItem("todo_list", JSON.stringify(todos));
+        saveFetch = fetch(baseURL + "todo_list", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(todos),
